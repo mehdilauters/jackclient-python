@@ -39,6 +39,14 @@ enum JackStatus {
     JackClientZombie = 0x1000
 };
 typedef enum JackStatus jack_status_t;
+enum JackLatencyCallbackMode
+{
+     JackCaptureLatency,
+     JackPlaybackLatency
+};
+typedef enum JackLatencyCallbackMode jack_latency_callback_mode_t;
+typedef void (*JackLatencyCallback)(jack_latency_callback_mode_t mode, void *arg);
+typedef struct _jack_latency_range jack_latency_range_t;
 typedef int (*JackProcessCallback)(jack_nframes_t nframes, void* arg);
 typedef int (*JackGraphOrderCallback)(void* arg);
 typedef int (*JackXRunCallback)(void* arg);
@@ -154,13 +162,13 @@ int jack_port_disconnect(jack_client_t* client, jack_port_t* port);
 int jack_port_name_size(void);
 /* not implemented: jack_port_type_size */
 /* not implemented: jack_port_type_get_buffer_size */
-/* TODO: jack_port_set_latency */
-/* TODO: jack_port_get_latency_range */
-/* TODO: jack_port_set_latency_range */
-/* TODO: jack_recompute_total_latencies */
-/* TODO: jack_port_get_latency */
-/* TODO: jack_port_get_total_latency */
-/* TODO: jack_recompute_total_latency */
+void jack_port_set_latency (jack_port_t *, jack_nframes_t);
+void jack_port_get_latency_range (jack_port_t *port, jack_latency_callback_mode_t mode, jack_latency_range_t *range);
+void jack_port_set_latency_range (jack_port_t *port, jack_latency_callback_mode_t mode, jack_latency_range_t *range);
+int jack_recompute_total_latencies (jack_client_t *);
+jack_nframes_t jack_port_get_latency (jack_port_t *port);
+jack_nframes_t jack_port_get_total_latency (jack_client_t *, jack_port_t *port);
+int jack_recompute_total_latency (jack_client_t *, jack_port_t *port);
 const char** jack_get_ports(jack_client_t* client, const char* port_name_pattern, const char* type_name_pattern, unsigned long flags);
 jack_port_t* jack_port_by_name(jack_client_t* client, const char* port_name);
 jack_port_t* jack_port_by_id(jack_client_t* client, jack_port_id_t port_id);
@@ -265,6 +273,11 @@ struct _jack_position {
     jack_nframes_t video_offset;
     int32_t padding[7];
     jack_unique_t unique_2;
+};
+struct _jack_latency_range
+{
+    jack_nframes_t min;
+    jack_nframes_t max;
 };
 """, packed=True)
 

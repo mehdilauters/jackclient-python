@@ -1382,6 +1382,9 @@ class Client(object):
         return port
 
 
+    def recompute_total_latencies(self):
+        return _lib.jack_recompute_total_latencies(self._ptr)
+
 class Port(object):
     """A JACK audio port.
 
@@ -1478,6 +1481,30 @@ class Port(object):
         """
         _check(_lib.jack_port_unset_alias(self._ptr, alias.encode()),
                'Error unsetting port alias')
+
+    def get_latency(self):
+        return _lib.jack_port_get_latency(self._ptr)
+
+
+    def set_latency(self, nframes):
+        return _lib.jack_port_set_latency(self._ptr, nframes)
+
+    def get_latency_range(self, playback = True):
+        _mode = _lib.JackCaptureLatency
+        if playback:
+            self._mode = _lib.JackPlaybackLatency
+        _range = _ffi.new('jack_latency_range_t*')
+        _lib.jack_port_get_latency_range(self._ptr, _mode, _range)
+        return (_range.min, _range.max)
+
+    def set_latency_range(self,min, max, playback = True):
+        _mode = _lib.JackCaptureLatency
+        if playback:
+            self._mode = _lib.JackPlaybackLatency
+        _range = _ffi.new('jack_latency_range_t*')
+        _range.min = min
+        _range.max = max
+        return _lib.jack_port_set_latency_range(self._ptr, _mode, _range)
 
     @property
     def uuid(self):
@@ -1708,6 +1735,12 @@ class OwnPort(Port):
         import numpy as np
         return np.frombuffer(self.get_buffer(), dtype=np.float32)
 
+
+    def get_total_latency(self):
+        return _lib.jack_port_get_total_latency(self.client._ptr, self._ptr)
+
+    def recompute_total_latency(self):
+        return _lib.jack_recompute_total_latency(self.client._ptr, self._ptr)
 
 class OwnMidiPort(MidiPort, OwnPort):
     """A JACK MIDI port owned by a `Client`.
